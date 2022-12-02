@@ -1,5 +1,6 @@
-var express = require("express");
-var router = express.Router();
+const express = require("express");
+const router = express.Router();
+const commom = require("../util/commom")
 const mysql = require("../mysql");
 
 router.post("/board", async (req, res) => {
@@ -18,63 +19,51 @@ router.post("/board", async (req, res) => {
     sql += "AND uid = '" + uid + "'"
   }
 
+  if(id) {
+    sql += "AND id = '" + id + "'"
+  }
+
+
   let query = "";
   switch(act_type) {
     case "submit_init" :
-      query =
-      "  INSERT INTO board_test SET " +
-      "  reg_date = NOW(), " +
-      "  reg_time = NOW(), " +
-      "  id   = '" + id + "', " +
-      "  title = '" + title + "', " +
-      "  content = '" + board_content + "', " +
-      "  summary = '" + summary + "'"
-      ;
-      break;
+    query = "  INSERT INTO board_test SET "
+        + "  reg_date = NOW(), "
+        + "  reg_time = NOW(), "
+        + "  id      = '" + id + "', "
+        + "  title   = '" + commom.addslashes(commom.toValue(title)) + "', "
+        + "  content = '" + commom.addslashes(commom.toValue(board_content)) + "', "
+        + "  summary = '" + commom.addslashes(commom.toValue(summary)) + "' "
+        ;
+        break;
     case "submit_mod" : 
-    query =
-    "   UPDATE board_test SET " +
-    " mod_date        = NOW()," +
-    " mod_time        = NOW()," +
-    "    title        = '" + title + "', " +
-    "  content        = '" + board_content + "', " +
-    "  summary        = '" + summary + "' " +
-    "    WHERE    uid = '" + uid + "' "
-    ;  
-    break;
+    query = " UPDATE board_test SET " 
+          + " mod_date      = NOW()," 
+          + " mod_time      = NOW(),"
+          + " title         = '" + commom.addslashes(commom.toValue(title)) + "', " 
+          + " content       = '" + commom.addslashes(commom.toValue(board_content)) + "', " 
+          + " summary       = '" + commom.addslashes(commom.toValue(summary)) + "' "
+          + " WHERE uid     = '" + uid + "' "
+          ;  
+          break;
     case "get_board_info" :
-      query = 
-      " SELECT *" +
-      "   FROM board_test" +
-      "   WHERE 1 "
-      + sql +
-      "   ORDER BY uid DESC"
-      ;
-      break;
+    query =  " SELECT *" 
+          + "   FROM board_test" 
+          + "  WHERE 1 "
+          + sql 
+          + "  ORDER BY uid DESC "
+          ;
+          break;
     case "delete" :
-        query = 
-        " DELETE FROM board_test " +
-        " WHERE 1 "
-        + sql
-        ; 
+    query =  " DELETE FROM board_test " 
+          + " WHERE 1 "
+          + sql
+          ; 
+          break;
   }
   
   console.log(query)
   const [contents] = await mysql.query(query);
-
-  // 모든 데이터 호출
-  // let arr = [];
-  // for (item of contents) {
-  //   if (item.mod_mem_uid == 0) {
-  //     item.is_mod = "N";
-  //   } else {
-  //     item.is_mod = "Y";
-  //   }
-  //   arr.push(item);
-  // }
-  // contents.map((item, idx) => (
-  //   item.index = idx
-  // ))
 
   resData.data = contents;
   if (contents.length == 0) {
